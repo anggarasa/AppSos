@@ -11,4 +11,8 @@ class SharedPrefService {
     preferences = await _instance;
     return preferences ?? await SharedPreferences.getInstance();
   }
+
+  static Future<void> clearAll() async {
+    await preferences?.clear();
+  }
 }

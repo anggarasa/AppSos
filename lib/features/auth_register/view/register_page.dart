@@ -1,7 +1,12 @@
+import 'package:appsos/configs/route/route_name.dart';
 import 'package:appsos/configs/theme/app_colors.dart';
+import 'package:appsos/features/auth_register/bloc/register_bloc.dart';
 import 'package:appsos/widgets/forms/labeled_text_field.dart';
+import 'package:appsos/widgets/snackbar/app_snackbar.dart';
+import 'package:appsos/services/remote/configs/network_exceptions.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -69,18 +74,18 @@ class _RegisterPageState extends State<RegisterPage> {
     return null;
   }
 
-  Future<void> _onRegisterPressed() async {
-    FocusScope.of(context).unfocus();
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isSubmitting = true);
-    await Future.delayed(const Duration(milliseconds: 900));
-    if (!mounted) return;
-    setState(() => _isSubmitting = false);
-
-    // TODO: Integrate with real auth then navigate accordingly
-    // context.go('/home');
-  }
+  // Future<void> _onRegisterPressed() async {
+  //   FocusScope.of(context).unfocus();
+  //   if (!_formKey.currentState!.validate()) return;
+  //   context.read<RegisterBloc>().add(
+  //     RegisterEvent.register(
+  //       name: _nameController.text.trim(),
+  //       username: _usernameController.text.trim(),
+  //       email: _emailController.text.trim(),
+  //       password: _passwordController.text,
+  //     ),
+  //   );
+  // }
 
   bool get _isFormFilled =>
       _nameController.text.trim().isNotEmpty &&
@@ -91,221 +96,301 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: Stack(
-          children: [
-            // Background gradient header
-            Container(
-              height: MediaQuery.of(context).size.height * 0.35,
-              decoration: const BoxDecoration(
-                gradient: AppColors.primaryGradient,
-              ),
-            ),
-            SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 24,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    return BlocProvider(
+      create: (context) => RegisterBloc(),
+      child: Builder(
+        builder: (context) {
+          return BlocListener<RegisterBloc, RegisterState>(
+            listener: (context, state) {
+              state.whenOrNull(
+                loading: () {
+                  setState(() {
+                    _isSubmitting = true;
+                  });
+                },
+                success: (data) {
+                  setState(() {
+                    _isSubmitting = false;
+                  });
+                  context.goNamed(RouteName.main);
+                },
+                failed: (error) {
+                  setState(() {
+                    _isSubmitting = false;
+                  });
+                  final message =
+                      error.whenOrNull(
+                        timeout: (message) =>
+                            message ?? 'Permintaan timeout. Coba lagi.',
+                        badResponse: (statusCode, message, data) =>
+                            message ?? 'Terjadi kesalahan ($statusCode).',
+                        cancel: (message) =>
+                            message ?? 'Permintaan dibatalkan.',
+                        connectionError: (message) =>
+                            message ??
+                            'Gangguan koneksi. Periksa internet Anda.',
+                        unknown: (message) =>
+                            message ?? 'Kesalahan tidak diketahui.',
+                        defaultError: (message) =>
+                            message ?? 'Terjadi kesalahan.',
+                      ) ??
+                      'Registrasi gagal. Silakan coba lagi.';
+                  AppSnackBar.showError(context, message);
+                },
+              );
+            },
+            child: Scaffold(
+              backgroundColor: AppColors.background,
+              body: GestureDetector(
+                onTap: () => FocusScope.of(context).unfocus(),
+                child: Stack(
                   children: [
-                    // Title
-                    Text(
-                      'Create Account',
-                      style: const TextStyle(
-                        color: AppColors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Daftar untuk memulai petualangan Anda',
-                      style: TextStyle(
-                        color: AppColors.white.withValues(alpha: 0.9),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Card
+                    // Background gradient header
                     Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.10),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
+                      height: MediaQuery.of(context).size.height * 0.35,
+                      decoration: const BoxDecoration(
+                        gradient: AppColors.primaryGradient,
                       ),
-                      child: Form(
-                        key: _formKey,
+                    ),
+                    SafeArea(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 24,
+                        ),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Name
-                            LabeledTextField(
-                              controller: _nameController,
-                              labelText: 'Nama Lengkap',
-                              hintText: 'Masukkan nama lengkap',
-                              validator: _nameValidator,
-                              onChanged: (_) => setState(() {}),
-                            ),
-                            const SizedBox(height: 14),
-
-                            // Username
-                            LabeledTextField(
-                              controller: _usernameController,
-                              labelText: 'Username',
-                              hintText: 'username123',
-                              validator: _usernameValidator,
-                              onChanged: (_) => setState(() {}),
-                            ),
-                            const SizedBox(height: 14),
-
-                            // Email
-                            LabeledTextFieldExtension.email(
-                              controller: _emailController,
-                              labelText: 'Email',
-                              hintText: 'nama@email.com',
-                              validator: _emailValidator,
-                              onChanged: (_) => setState(() {}),
-                            ),
-                            const SizedBox(height: 14),
-
-                            // Password
-                            LabeledTextFieldExtension.password(
-                              controller: _passwordController,
-                              labelText: 'Password',
-                              hintText: '••••••••',
-                              obscureText: _obscurePassword,
-                              validator: _passwordValidator,
-                              onChanged: (_) => setState(() {}),
-                              suffixIcon: IconButton(
-                                onPressed: () => setState(
-                                  () => _obscurePassword = !_obscurePassword,
-                                ),
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_off_outlined
-                                      : Icons.visibility_outlined,
-                                  color: AppColors.textSecondary,
-                                  size: 20,
-                                ),
+                            // Title
+                            Text(
+                              'Create Account',
+                              style: const TextStyle(
+                                color: AppColors.white,
+                                fontSize: 28,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
-                            const SizedBox(height: 14),
-
-                            // Confirm Password
-                            LabeledTextFieldExtension.password(
-                              controller: _confirmPasswordController,
-                              labelText: 'Konfirmasi Password',
-                              hintText: '••••••••',
-                              obscureText: _obscureConfirmPassword,
-                              validator: _confirmPasswordValidator,
-                              onChanged: (_) => setState(() {}),
-                              suffixIcon: IconButton(
-                                onPressed: () => setState(
-                                  () => _obscureConfirmPassword =
-                                      !_obscureConfirmPassword,
-                                ),
-                                icon: Icon(
-                                  _obscureConfirmPassword
-                                      ? Icons.visibility_off_outlined
-                                      : Icons.visibility_outlined,
-                                  color: AppColors.textSecondary,
-                                  size: 20,
-                                ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Daftar untuk memulai petualangan Anda',
+                              style: TextStyle(
+                                color: AppColors.white.withValues(alpha: 0.9),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
                               ),
                             ),
-                            const SizedBox(height: 18),
+                            const SizedBox(height: 24),
 
-                            // Register button
-                            SizedBox(
-                              height: 48,
-                              child: ElevatedButton(
-                                onPressed: _isFormFilled && !_isSubmitting
-                                    ? _onRegisterPressed
-                                    : null,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
-                                  disabledBackgroundColor: AppColors.primary
-                                      .withValues(alpha: 0.5),
-                                  foregroundColor: AppColors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                            // Card
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.fromLTRB(
+                                20,
+                                20,
+                                20,
+                                12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.10,
+                                    ),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 8),
                                   ),
-                                  elevation: 0,
-                                ),
-                                child: _isSubmitting
-                                    ? const SizedBox(
-                                        height: 22,
-                                        width: 22,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.5,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                AppColors.white,
-                                              ),
+                                ],
+                              ),
+                              child: Form(
+                                key: _formKey,
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    // Name
+                                    LabeledTextField(
+                                      controller: _nameController,
+                                      labelText: 'Nama Lengkap',
+                                      hintText: 'Masukkan nama lengkap',
+                                      validator: _nameValidator,
+                                      onChanged: (_) => setState(() {}),
+                                    ),
+                                    const SizedBox(height: 14),
+
+                                    // Username
+                                    LabeledTextField(
+                                      controller: _usernameController,
+                                      labelText: 'Username',
+                                      hintText: 'username123',
+                                      validator: _usernameValidator,
+                                      onChanged: (_) => setState(() {}),
+                                    ),
+                                    const SizedBox(height: 14),
+
+                                    // Email
+                                    LabeledTextFieldExtension.email(
+                                      controller: _emailController,
+                                      labelText: 'Email',
+                                      hintText: 'nama@email.com',
+                                      validator: _emailValidator,
+                                      onChanged: (_) => setState(() {}),
+                                    ),
+                                    const SizedBox(height: 14),
+
+                                    // Password
+                                    LabeledTextFieldExtension.password(
+                                      controller: _passwordController,
+                                      labelText: 'Password',
+                                      hintText: '••••••••',
+                                      obscureText: _obscurePassword,
+                                      validator: _passwordValidator,
+                                      onChanged: (_) => setState(() {}),
+                                      suffixIcon: IconButton(
+                                        onPressed: () => setState(
+                                          () => _obscurePassword =
+                                              !_obscurePassword,
                                         ),
-                                      )
-                                    : const Text(
-                                        'Daftar',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
+                                        icon: Icon(
+                                          _obscurePassword
+                                              ? Icons.visibility_off_outlined
+                                              : Icons.visibility_outlined,
+                                          color: AppColors.textSecondary,
+                                          size: 20,
                                         ),
                                       ),
+                                    ),
+                                    const SizedBox(height: 14),
+
+                                    // Confirm Password
+                                    LabeledTextFieldExtension.password(
+                                      controller: _confirmPasswordController,
+                                      labelText: 'Konfirmasi Password',
+                                      hintText: '••••••••',
+                                      obscureText: _obscureConfirmPassword,
+                                      validator: _confirmPasswordValidator,
+                                      onChanged: (_) => setState(() {}),
+                                      suffixIcon: IconButton(
+                                        onPressed: () => setState(
+                                          () => _obscureConfirmPassword =
+                                              !_obscureConfirmPassword,
+                                        ),
+                                        icon: Icon(
+                                          _obscureConfirmPassword
+                                              ? Icons.visibility_off_outlined
+                                              : Icons.visibility_outlined,
+                                          color: AppColors.textSecondary,
+                                          size: 20,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 18),
+
+                                    // Register button
+                                    SizedBox(
+                                      height: 48,
+                                      child: ElevatedButton(
+                                        onPressed:
+                                            _isFormFilled && !_isSubmitting
+                                            ? () {
+                                                context
+                                                    .read<RegisterBloc>()
+                                                    .add(
+                                                      RegisterEvent.register(
+                                                        name: _nameController
+                                                            .text
+                                                            .trim(),
+                                                        username:
+                                                            _usernameController
+                                                                .text
+                                                                .trim(),
+                                                        email: _emailController
+                                                            .text
+                                                            .trim(),
+                                                        password:
+                                                            _passwordController
+                                                                .text,
+                                                      ),
+                                                    );
+                                              }
+                                            : null,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppColors.primary,
+                                          disabledBackgroundColor: AppColors
+                                              .primary
+                                              .withValues(alpha: 0.5),
+                                          foregroundColor: AppColors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          elevation: 0,
+                                        ),
+                                        child: _isSubmitting
+                                            ? const SizedBox(
+                                                height: 22,
+                                                width: 22,
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth: 2.5,
+                                                  valueColor:
+                                                      AlwaysStoppedAnimation<
+                                                        Color
+                                                      >(AppColors.white),
+                                                ),
+                                              )
+                                            : const Text(
+                                                'Daftar',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                  ],
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 8),
+
+                            const SizedBox(height: 16),
+                            // Login link
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text(
+                                  'Sudah punya akun? ',
+                                  style: TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    context.pop();
+                                  },
+                                  child: const Text(
+                                    'Masuk',
+                                    style: TextStyle(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ],
                         ),
                       ),
-                    ),
-
-                    const SizedBox(height: 16),
-                    // Login link
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          'Sudah punya akun? ',
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 14,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            context.pop();
-                          },
-                          child: const Text(
-                            'Masuk',
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 ),
               ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

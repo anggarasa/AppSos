@@ -3,21 +3,14 @@ import 'dart:ui' as ui;
 import 'package:appsos/configs/navigator_key.dart';
 import 'package:appsos/configs/route/routes.dart';
 import 'package:appsos/configs/theme/app_theme.dart';
-import 'package:appsos/services/shared_preferences/shared_preferences_service.dart';
+import 'package:appsos/services/local/shared_preferences/shared_preferences_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:sizer/sizer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await dotenv.load(fileName: ".env");
-  } catch (e) {
-    // .env file not found, continue without it
-    print(
-      "Warning: .env file not found, continuing without environment variables",
-    );
-  }
+  await dotenv.load(fileName: ".env");
   await SharedPrefService.init();
   runApp(const MyApp());
 }
