@@ -1,3 +1,4 @@
+import 'package:appsos/services/local/secure_storage/secure_storage_service.dart';
 import 'package:appsos/services/remote/configs/api_response.dart';
 import 'package:appsos/services/remote/configs/network_exceptions.dart';
 import 'package:appsos/services/remote/implementation/auth_service.dart';
@@ -11,6 +12,7 @@ part 'register_bloc.freezed.dart';
 
 class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
   final AuthService _authService = AuthService();
+  final SecureStorageService _secureStorageService = SecureStorageService();
   RegisterBloc() : super(const RegisterState.initial()) {
     on<RegisterEvent>((event, emit) async {
       await event.when(
@@ -23,7 +25,10 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
             password: password,
           );
           response.when(
-            success: (data) => emit(RegisterState.success(data)),
+            success: (data) {
+              _secureStorageService.saveToken(data.data.token);
+              emit(RegisterState.success(data));
+            },
             error: (error) => emit(RegisterState.failed(error)),
           );
         },

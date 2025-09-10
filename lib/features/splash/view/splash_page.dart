@@ -1,4 +1,5 @@
 import 'package:appsos/configs/route/route_name.dart';
+import 'package:appsos/services/local/secure_storage/secure_storage_service.dart';
 import 'package:flutter/material.dart';
 import 'package:appsos/configs/theme/app_colors.dart';
 import 'package:appsos/features/splash/widgets/animated_logo.dart';
@@ -24,6 +25,7 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   late Animation<double> _textSlideAnimation;
   late Animation<double> _textOpacityAnimation;
   late Animation<double> _backgroundOpacityAnimation;
+  final SecureStorageService _secureStorageService = SecureStorageService();
 
   @override
   void initState() {
@@ -82,7 +84,14 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     // Navigate to next screen after 3 seconds
     await Future.delayed(const Duration(milliseconds: 3000));
     if (mounted) {
-      context.goNamed(RouteName.login);
+      final token = await _secureStorageService.readToken();
+      if (token != null) {
+        // ignore: use_build_context_synchronously
+        context.goNamed(RouteName.main);
+      } else {
+        // ignore: use_build_context_synchronously
+        context.goNamed(RouteName.login);
+      }
     }
   }
 

@@ -1,3 +1,4 @@
+import 'package:appsos/services/local/secure_storage/secure_storage_service.dart';
 import 'package:appsos/services/remote/configs/api_response.dart';
 import 'package:appsos/services/remote/configs/network_exceptions.dart';
 import 'package:appsos/services/remote/implementation/auth_service.dart';
@@ -11,6 +12,7 @@ part 'login_bloc.freezed.dart';
 
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
   final AuthService _authService = AuthService();
+  final SecureStorageService _secureStorageService = SecureStorageService();
   LoginBloc() : super(const LoginState.initial()) {
     on<LoginEvent>((event, emit) async {
       await event.when(
@@ -22,7 +24,10 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
             password: password,
           );
           response.when(
-            success: (data) => emit(LoginState.success(data)),
+            success: (data) {
+              _secureStorageService.saveToken(data.data.token);
+              emit(LoginState.success(data));
+            },
             error: (error) => emit(LoginState.failed(error)),
           );
         },
