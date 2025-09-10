@@ -1,37 +1,35 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'auth_register_response_model.dart';
+part of 'auth_login_response_model.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-_AuthRegisterResponseModel _$AuthRegisterResponseModelFromJson(
+_AuthLoginResponseModel _$AuthLoginResponseModelFromJson(
   Map<String, dynamic> json,
-) => _AuthRegisterResponseModel(
+) => _AuthLoginResponseModel(
   status: (json['status'] as num).toInt(),
   message: json['message'] as String,
-  data: RegisterResponseData.fromJson(json['data'] as Map<String, dynamic>),
+  data: LoginResponseData.fromJson(json['data'] as Map<String, dynamic>),
 );
 
-Map<String, dynamic> _$AuthRegisterResponseModelToJson(
-  _AuthRegisterResponseModel instance,
+Map<String, dynamic> _$AuthLoginResponseModelToJson(
+  _AuthLoginResponseModel instance,
 ) => <String, dynamic>{
   'status': instance.status,
   'message': instance.message,
   'data': instance.data,
 };
 
-_RegisterResponseData _$RegisterResponseDataFromJson(
-  Map<String, dynamic> json,
-) => _RegisterResponseData(
-  token: json['token'] as String,
-  user: User.fromJson(json['user'] as Map<String, dynamic>),
-);
+_LoginResponseData _$LoginResponseDataFromJson(Map<String, dynamic> json) =>
+    _LoginResponseData(
+      token: json['token'] as String,
+      user: User.fromJson(json['user'] as Map<String, dynamic>),
+    );
 
-Map<String, dynamic> _$RegisterResponseDataToJson(
-  _RegisterResponseData instance,
-) => <String, dynamic>{'token': instance.token, 'user': instance.user};
+Map<String, dynamic> _$LoginResponseDataToJson(_LoginResponseData instance) =>
+    <String, dynamic>{'token': instance.token, 'user': instance.user};
 
 _User _$UserFromJson(Map<String, dynamic> json) => _User(
   id: json['id'] as String,
