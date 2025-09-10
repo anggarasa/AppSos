@@ -1,5 +1,6 @@
 import 'package:appsos/configs/theme/app_colors.dart';
 import 'package:appsos/features/home/view/home_page.dart';
+import 'package:appsos/features/profile/view/profile_page.dart';
 import 'package:flutter/material.dart';
 
 class MainShell extends StatefulWidget {
@@ -17,7 +18,7 @@ class _MainShellState extends State<MainShell> {
     _PlaceholderPage(title: 'Search'),
     _PlaceholderPage(title: 'Create Post'),
     _PlaceholderPage(title: 'Notifications'),
-    _PlaceholderPage(title: 'Profile'),
+    ProfilePage(),
   ];
 
   @override
